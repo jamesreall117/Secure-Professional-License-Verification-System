@@ -1,30 +1,85 @@
+;; license-issuance.clar
+;; This contract records professional qualifications and approvals
 
-;; title: license-issuance
-;; version:
-;; summary:
-;; description:
+(define-constant err-not-authorized (err u100))
+(define-constant err-license-exists (err u101))
+(define-constant err-license-not-found (err u102))
 
-;; traits
-;;
+;; Define license data structure
+(define-map licenses
+  { license-id: (string-ascii 20), professional-id: principal }
+  {
+    authority: principal,
+    profession: (string-ascii 50),
+    issue-date: uint,
+    expiry-date: uint,
+    qualifications: (string-ascii 200)
+  }
+)
 
-;; token definitions
-;;
+;; Define license ID to professional mapping for lookup
+(define-map license-id-to-professional
+  { license-id: (string-ascii 20) }
+  { professional-id: principal }
+)
 
-;; constants
-;;
+;; Contract for authority validation
+(define-trait authority-trait
+  (
+    (is-authority (principal) (response bool uint))
+  )
+)
 
-;; data vars
-;;
+;; Issue a new license
+(define-public (issue-license
+    (license-id (string-ascii 20))
+    (professional-id principal)
+    (profession (string-ascii 50))
+    (expiry-date uint)
+    (qualifications (string-ascii 200))
+    (authority-contract <authority-trait>))
+  (let
+    ((authority-check (contract-call? authority-contract is-authority tx-sender)))
+    (begin
+      (asserts! (is-ok authority-check) err-not-authorized)
+      (asserts! (is-eq (unwrap-panic authority-check) true) err-not-authorized)
+      (asserts! (is-none (map-get? license-id-to-professional { license-id: license-id })) err-license-exists)
 
-;; data maps
-;;
+      (map-set license-id-to-professional
+        { license-id: license-id }
+        { professional-id: professional-id }
+      )
 
-;; public functions
-;;
+      (map-set licenses
+        { license-id: license-id, professional-id: professional-id }
+        {
+          authority: tx-sender,
+          profession: profession,
+          issue-date: block-height,
+          expiry-date: expiry-date,
+          qualifications: qualifications
+        }
+      )
+      (ok true)
+    )
+  )
+)
 
-;; read only functions
-;;
+;; Get license details
+(define-read-only (get-license-details (license-id (string-ascii 20)))
+  (let
+    ((professional-data (map-get? license-id-to-professional { license-id: license-id })))
+    (if (is-some professional-data)
+      (let
+        ((professional (get professional-id (unwrap-panic professional-data))))
+        (map-get? licenses { license-id: license-id, professional-id: professional })
+      )
+      none
+    )
+  )
+)
 
-;; private functions
-;;
-
+;; Check if a license exists
+(define-read-only (license-exists (license-id (string-ascii 20)))
+  (is-some (map-get? license-id-to-professional { license-id: license-id }))
+)
