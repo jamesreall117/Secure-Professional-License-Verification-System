@@ -9,3 +9,7 @@ R
 "contracts/licensing-authority.clar,d/0/d01769a2445670e4b070cb07c20b8d8779202b60
 Q
 !tests/licensing-authority.test.ts,3/f/3f0e722d424e47572110600b6ddfd3254cbb8839
+M
+tests/status-tracking.test.ts,a/4/a4fb3e1f2cae00f70578e01879d4e41143ea3b1b
+N
+contracts/status-tracking.clar,8/a/8a40b4d093bc9fc9e8cd3bbb2372aeca759461be
