@@ -1,30 +1,40 @@
+;; licensing-authority.clar
+;; This contract validates legitimate regulatory bodies
 
-;; title: licensing-authority
-;; version:
-;; summary:
-;; description:
+(define-data-var contract-owner principal tx-sender)
 
-;; traits
-;;
+;; Map to store authorized licensing authorities
+(define-map licensing-authorities principal bool)
 
-;; token definitions
-;;
+;; Error codes
+(define-constant err-not-authorized (err u100))
+(define-constant err-already-registered (err u101))
+(define-constant err-not-found (err u102))
 
-;; constants
-;;
+;; Check if caller is contract owner
+(define-private (is-contract-owner)
+  (is-eq tx-sender (var-get contract-owner)))
 
-;; data vars
-;;
+;; Register a new licensing authority
+(define-public (register-authority (authority principal))
+  (begin
+    (asserts! (is-contract-owner) err-not-authorized)
+    (asserts! (is-none (map-get? licensing-authorities authority)) err-already-registered)
+    (ok (map-set licensing-authorities authority true))))
 
-;; data maps
-;;
+;; Remove a licensing authority
+(define-public (remove-authority (authority principal))
+  (begin
+    (asserts! (is-contract-owner) err-not-authorized)
+    (asserts! (is-some (map-get? licensing-authorities authority)) err-not-found)
+    (ok (map-delete licensing-authorities authority))))
 
-;; public functions
-;;
+;; Check if an authority is registered
+(define-read-only (is-authority (authority principal))
+  (default-to false (map-get? licensing-authorities authority)))
 
-;; read only functions
-;;
-
-;; private functions
-;;
-
+;; Transfer ownership of the contract
+(define-public (transfer-ownership (new-owner principal))
+  (begin
+    (asserts! (is-contract-owner) err-not-authorized)
+    (ok (var-set contract-owner new-owner))))
