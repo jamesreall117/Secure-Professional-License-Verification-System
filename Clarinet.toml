@@ -1,0 +1,29 @@
+[project]
+name = 'Secure-Professional-License-Verification-System'
+description = ''
+authors = []
+telemetry = true
+cache_dir = './.cache'
+requirements = []
+[contracts.license-issuance]
+path = 'contracts/license-issuance.clar'
+clarity_version = 2
+epoch = 2.5
+
+[contracts.licensing-authority]
+path = 'contracts/licensing-authority.clar'
+clarity_version = 2
+epoch = 2.5
+
+[contracts.status-tracking]
+path = 'contracts/status-tracking.clar'
+clarity_version = 2
+epoch = 2.5
+[repl.analysis]
+passes = ['check_checker']
+
+[repl.analysis.check_checker]
+strict = false
+trusted_sender = false
+trusted_caller = false
+callee_filter = false
